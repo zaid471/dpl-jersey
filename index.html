@@ -1,159 +1,107 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<title>DPL Jersey Selection</title>
+<title>DPL Jersey Selector</title>
 
 <style>
-
 body{
 font-family:Arial;
 text-align:center;
-background:#0f172a;
-color:white;
-}
-
-h1{
-margin-top:20px;
+background:#f4f4f4;
 }
 
 .grid{
 display:grid;
-grid-template-columns:repeat(10,80px);
-gap:12px;
+grid-template-columns:repeat(10,60px);
+gap:10px;
 justify-content:center;
-margin-top:30px;
+margin-top:20px;
 }
 
-.number{
-width:80px;
-height:80px;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-background:#22c55e;
+.jersey{
+background:#2ecc71;
+color:white;
+padding:15px;
 border-radius:8px;
 cursor:pointer;
-font-weight:bold;
 }
 
 .taken{
-background:#ef4444;
+background:#e74c3c;
 cursor:not-allowed;
 }
 
-.name{
-font-size:12px;
-margin-top:4px;
+#list{
+margin-top:30px;
 }
-
-table{
-margin:auto;
-margin-top:40px;
-border-collapse:collapse;
-width:300px;
-background:white;
-color:black;
-}
-
-th,td{
-border:1px solid #ccc;
-padding:8px;
-}
-
-th{
-background:#eee;
-}
-
 </style>
 </head>
 
 <body>
 
 <h1>DPL Jersey Selection</h1>
-<p>Green = Available | Red = Taken</p>
 
-<div class="grid" id="grid"></div>
+<div class="grid" id="jerseys"></div>
 
-<h2>Selected Players</h2>
-
-<table>
-<tr>
-<th>Jersey</th>
-<th>Name</th>
-</tr>
-<tbody id="playerList"></tbody>
-</table>
+<h2>Selected Jerseys</h2>
+<ul id="list"></ul>
 
 <script>
 
-let grid=document.getElementById("grid")
-let playerList=document.getElementById("playerList")
+const API="https://script.google.com/macros/s/AKfycbzHSD9kWDpP_2kJsW5iNn3DpU045aM9xBaar7zK4TzLdWTvbavH1171V2-yX3ige3-jBA/exec";
 
-let saved=JSON.parse(localStorage.getItem("jerseyData")) || {}
+const grid=document.getElementById("jerseys");
+const list=document.getElementById("list");
 
-function updateList(){
+async function loadData(){
 
-playerList.innerHTML=""
+const res=await fetch(API);
+const data=await res.json();
 
-for(let num in saved){
+grid.innerHTML="";
+list.innerHTML="";
 
-let row=document.createElement("tr")
+for(let i=1;i<data.length;i++){
 
-row.innerHTML="<td>"+num+"</td><td>"+saved[num]+"</td>"
+const number=data[i][0];
+const name=data[i][1];
 
-playerList.appendChild(row)
-
-}
-
-}
-
-for(let i=1;i<=60;i++){
-
-let box=document.createElement("div")
-
-box.classList.add("number")
-
-if(saved[i]){
-
-box.classList.add("taken")
-
-box.innerHTML=i+"<div class='name'>"+saved[i]+"</div>"
-
-}else{
-
-box.innerHTML=i
-
-}
-
-box.onclick=function(){
-
-if(saved[i]) return
-
-let name=prompt("Enter your name")
+const div=document.createElement("div");
+div.className="jersey";
+div.innerText=number;
 
 if(name){
+div.classList.add("taken");
+list.innerHTML+=`<li>${name} — #${number}</li>`;
+}
 
-saved[i]=name
+div.onclick=async()=>{
 
-localStorage.setItem("jerseyData",JSON.stringify(saved))
+if(name) return;
 
-box.classList.add("taken")
+const player=prompt("Enter your name");
 
-box.innerHTML=i+"<div class='name'>"+name+"</div>"
+if(!player) return;
 
-updateList()
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+number:number,
+name:player
+})
+});
+
+loadData();
+
+};
+
+grid.appendChild(div);
 
 }
 
 }
 
-grid.appendChild(box)
-
-}
-
-updateList()
+loadData();
 
 </script>
 
